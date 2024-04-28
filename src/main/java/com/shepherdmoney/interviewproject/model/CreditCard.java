@@ -1,31 +1,35 @@
 package com.shepherdmoney.interviewproject.model;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import java.util.List;
 
 @Entity
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
+@ApiModel(description = "Details about a credit card")
 public class CreditCard {
 
     @Id
+    @ApiModelProperty(notes = "The unique ID of the credit card")
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
 
+    @ApiModelProperty(required = true, notes = "The bank that issued the credit card")
     private String issuanceBank;
 
+    @ApiModelProperty(required = true, notes = "The number of the credit card")
     private String number;
 
-    // TODO: Credit card's owner. For detailed hint, please see User class
+    // TODO: Credit card's owner. For detailed hint, pleaCse see User class
     // Some field here <> owner;
 
     // TODO: Credit card's balance history. It is a requirement that the dates in the balanceHistory 
@@ -47,4 +51,14 @@ public class CreditCard {
     //        4. Deletion of a balance should be fast
     //        5. It is possible that there are gaps in between dates (note the 04-13 and 04-16)
     //        6. In the condition that there are gaps, retrieval of "closest" balance date should also be fast. Aka, given 4-15, return 4-16 entry tuple
+
+    // Many-to-one relationship back to User
+    @ApiModelProperty(required = true, notes = "The user associated with the credit card")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @ApiModelProperty(required = true, notes = "The balance history of the credit card")
+    @OneToMany(mappedBy = "creditCard")
+    private List<BalanceHistory> balanceHistory;
 }
