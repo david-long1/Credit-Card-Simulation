@@ -17,9 +17,11 @@ import java.time.LocalDate;
 @ApiModel(description = "Balance history of a credit card")
 @RequiredArgsConstructor
 @Table(name = "BalanceHistory", indexes = {
-        @Index(name = "idx_date", columnList = "date")
+        @Index(name = "idx_date", columnList = "date ASC"),
+        @Index(name = "idx_credit_card_id_date_asc", columnList = "creditCard_id, date ASC"),
+        @Index(name = "idx_credit_card_id_date_desc", columnList = "creditCard_id, date DESC")
 })
-public class BalanceHistory {
+public class BalanceHistory implements Comparable<BalanceHistory> {
 
     @Id
     @ApiModelProperty(notes = "The unique ID of the history")
@@ -36,4 +38,9 @@ public class BalanceHistory {
     @ManyToOne
     @JoinColumn(name = "creditCard_id")
     private CreditCard creditCard;
+
+    @Override
+    public int compareTo(BalanceHistory o) {
+        return this.date.compareTo(o.date);
+    }
 }

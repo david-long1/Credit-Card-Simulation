@@ -7,8 +7,10 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.SortNatural;
 
-import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 @Entity
 @Getter
@@ -59,6 +61,7 @@ public class CreditCard {
     private User user;
 
     @ApiModelProperty(required = true, notes = "The balance history of the credit card")
-    @OneToMany(mappedBy = "creditCard")
-    private List<BalanceHistory> balanceHistory;
+    @OneToMany(mappedBy = "creditCard", fetch = FetchType.LAZY)
+    @SortNatural
+    private SortedSet<BalanceHistory> balanceHistory = new TreeSet<>();
 }

@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -99,6 +98,11 @@ public class CreditCardServiceImpl implements CreditCardService {
             // If there are gaps between two balance dates, fill the empty date with the balance of the previous date
             fillGapsInBalanceHistory(creditCard);
 
+            // After each update operation, you can immediately synchronize the persistence context to the database
+            entityManager.flush();
+            // Clear the persistence context to avoid any potential issues with cached entities
+            entityManager.clear();
+
             // Update all subsequent balances after payload date
             updateBalancesAfterPayloadDate(payloadDate, payloadAmount, creditCard);
 
@@ -134,16 +138,16 @@ public class CreditCardServiceImpl implements CreditCardService {
      *
      * @param creditCard The credit card for which to fill balance history gaps.
      */
+    @Transactional
     private void fillGapsInBalanceHistory(CreditCard creditCard) {
         // Retrieve the earliest and latest date in the balance history for the given credit card
         LocalDate startDate = balanceHistoryRepository.findEarliestDateByCreditCard(creditCard)
                 .orElseThrow(() -> new BusinessException(ResponseEnum.PARAM_EXCEPTION));
-        LocalDate endDate = balanceHistoryRepository.findLatestDateByCreditCard(creditCard)
-                .orElseThrow(() -> new BusinessException(ResponseEnum.PARAM_EXCEPTION));
         List<BalanceHistory> gapHistories = new ArrayList<>();
+        LocalDate today = LocalDate.now();
 
-        // We start from the day after the earliest date and go up to the latest date (inclusive)
-        for (LocalDate date = startDate.plusDays(1); date.isBefore(endDate); date = date.plusDays(1)) {
+        // We start from the day after the earliest date and go up to today (inclusive)
+        for (LocalDate date = startDate.plusDays(1); date.isBefore(today); date = date.plusDays(1)) {
             boolean exists = balanceHistoryRepository.existsByCreditCardAndDate(creditCard, date);
 
             if (!exists) {
@@ -155,6 +159,7 @@ public class CreditCardServiceImpl implements CreditCardService {
                 gapHistories.add(gapHistory);
             }
         }
+
         // Perform a bulk save operation
         balanceHistoryRepository.saveAll(gapHistories);
         balanceHistoryRepository.flush(); // Ensure all pending changes are applied to the database

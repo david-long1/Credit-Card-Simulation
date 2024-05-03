@@ -25,9 +25,6 @@ public interface BalanceHistoryRepository extends JpaRepository<BalanceHistory, 
     @Query("SELECT MIN(bh.date) FROM BalanceHistory bh WHERE bh.creditCard = :creditCard")
     Optional<LocalDate> findEarliestDateByCreditCard(@Param("creditCard") CreditCard creditCard);
 
-    @Query("SELECT MAX(bh.date) FROM BalanceHistory bh WHERE bh.creditCard = :creditCard")
-    Optional<LocalDate> findLatestDateByCreditCard(@Param("creditCard") CreditCard creditCard);
-
     boolean existsByCreditCardAndDate(CreditCard creditCard, LocalDate date);
 
     @Query("SELECT bh FROM BalanceHistory bh WHERE bh.creditCard = :creditCard AND bh.date < :date ORDER BY bh.date DESC LIMIT 1")
